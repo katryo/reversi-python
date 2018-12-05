@@ -1,3 +1,4 @@
+from copy import deepcopy
 from random import randint
 PLAYER_O = 0
 PLAYER_X = 1
@@ -36,42 +37,32 @@ class Game:
             return STONE_X
         return STONE_O
 
-    def _can_flip_move(self, row, row_diff, col, col_diff):
-        if not self._on_board(row + row_diff, col+col_diff):
-            return False
-        if self.board[row+row_diff][col+col_diff] != self._oponent_stone():
-            return False
-        r = row+row_diff
-        c = col+col_diff
-        while self._on_board(r, c) and self.board[r][c] == self._oponent_stone():
-            r += row_diff
-            c += col_diff
-        if self._on_board(r, c) and self.board[r][c] == self._players_stone():
-            return True
-        return False
-
-    def _can_flip_stone(self, row, col):
-        for rd, cd in ((-1, 0), (1, 0), (0, 1), (1, 0), (-1, -1), (1, 1), (-1, 1), (1, -1)):
-            if self._can_flip_move(row, rd, col, cd):
-                return True
-        return False
-
-    def _flip_if_can(self, row, rd, col, cd):
-        if self._can_flip_move(row, rd, col, cd):
-            self._put_stone_flip_direction(row, rd, col, cd)
-
     def _put_stone_flip(self, row, col):
         self.board[row][col] = self._players_stone()
+        total = 0
         for rd, cd in ((1, 0), (-1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)):
-            self._flip_if_can(row, rd, col, cd)
+            total += self._put_stone_flip_direction(row, rd, col, cd)
+        return total
 
     def _put_stone_flip_direction(self, row, rd, col, cd):
         r = row + rd
         c = col + cd
-        while self.board[r][c] != self._players_stone():
+        total = 0
+        while self._on_board(r, c) and self.board[r][c] == self._oponent_stone():
+            total += 1
             self.board[r][c] = self._players_stone()
             r += rd
             c += cd
+        if self._on_board(r, c) and self.board[r][c] == self._players_stone():
+            return total
+        return 0
+
+    def _can_flip_stone(self, row, col):
+        prev_board = deepcopy(self.board)
+        stone_flipped = self._put_stone_flip(row, col)
+
+        self.board = prev_board
+        return stone_flipped > 0
 
     def _play_move(self, row, col):
         if row < 0 or row > 7 or col < 0 or col > 7:
@@ -79,10 +70,11 @@ class Game:
         if self.board[row][col] != BLANK:
             return INVALID
 
-        if not self._can_flip_stone(row, col):
+        prev_board = deepcopy(self.board)
+        stone_flipped = self._put_stone_flip(row, col)
+        if stone_flipped == 0:
+            self.board = prev_board
             return INVALID
-
-        self._put_stone_flip(row, col)
         self.move_count += 1
 
         if self.move_count == 8 * 8:
