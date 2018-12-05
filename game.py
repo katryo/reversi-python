@@ -1,5 +1,4 @@
 from copy import deepcopy
-from random import randint
 PLAYER_O = 0
 PLAYER_X = 1
 BLANK = '-'
@@ -157,8 +156,14 @@ class Game:
                     continue
                 row, col = availables[num]
             else:
-                num = randint(0, len(availables)-1)
-                row, col = availables[num]
+                prev_board = deepcopy(self.board)
+                best_move = (-1, float('inf'))
+                for i, (row, col) in enumerate(availables):
+                    stone_flipped = self._put_stone_flip(row, col)
+                    self.board = deepcopy(prev_board)
+                    if stone_flipped < best_move[1]:
+                        best_move = (i, stone_flipped)
+                row, col = availables[best_move[0]]
             result = self._play_move(row, col)
             if result == INVALID:
                 print("Invalid move")
@@ -171,5 +176,4 @@ class Game:
 
 if __name__ == '__main__':
     game = Game()
-    # print(game._can_flip_stone(4, 2))
     game.start()
