@@ -1,3 +1,4 @@
+from random import randint
 PLAYER_O = 0
 PLAYER_X = 1
 BLANK = '-'
@@ -9,7 +10,7 @@ INVALID = 2
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, x_is_computer=True):
         self.board = [[BLANK] * 8 for _ in range(8)]
         self.board[3][3] = STONE_O
         self.board[4][4] = STONE_O
@@ -17,6 +18,7 @@ class Game:
         self.board[4][3] = STONE_X
         self.current_player = PLAYER_O
         self.move_count = 4
+        self.x_is_computer = x_is_computer
 
     def _off_board(self, row, col):
         return row < 0 or row > 7 or col < 0 or col > 7
@@ -165,16 +167,20 @@ class Game:
                 self._change_turn()
                 continue
 
-            line = input().strip()
-            try:
-                num = ord(line)-ord('a')
-            except:
-                print("Invalid input")
-                continue
-            if num < 0 or len(availables)-1 < num:
-                print("Invalid input")
-                continue
-            row, col = availables[num]
+            if not self.x_is_computer or self.current_player == PLAYER_O:
+                line = input().strip()
+                try:
+                    num = ord(line)-ord('a')
+                except:
+                    print("Invalid input")
+                    continue
+                if num < 0 or len(availables)-1 < num:
+                    print("Invalid input")
+                    continue
+                row, col = availables[num]
+            else:
+                num = randint(0, len(availables)-1)
+                row, col = availables[num]
             result = self._play_move(row, col)
             if result == INVALID:
                 print("Invalid move")
