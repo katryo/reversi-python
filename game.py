@@ -51,33 +51,19 @@ class Game:
         return False
 
     def _can_flip_stone(self, row, col):
-        return self._can_flip_move(row, -1, col, 0) or \
-               self._can_flip_move(row, 1, col, 0) or \
-               self._can_flip_move(row, 0, col, 1) or \
-               self._can_flip_move(row, 0, col, -1) or \
-               self._can_flip_move(row, 1, col, 1) or \
-               self._can_flip_move(row, -1, col, -1) or \
-               self._can_flip_move(row, 1, col, -1) or \
-               self._can_flip_move(row, -1, col, 1)
+        for rd, cd in ((-1, 0), (1, 0), (0, 1), (1, 0), (-1, -1), (1, 1), (-1, 1), (1, -1)):
+            if self._can_flip_move(row, rd, col, cd):
+                return True
+        return False
+
+    def _flip_if_can(self, row, rd, col, cd):
+        if self._can_flip_move(row, rd, col, cd):
+            self._put_stone_flip_direction(row, rd, col, cd)
 
     def _put_stone_flip(self, row, col):
         self.board[row][col] = self._players_stone()
-        if self._can_flip_move(row, -1, col, 0):
-            self._put_stone_flip_direction(row, -1, col, 0)
-        if self._can_flip_move(row, 1, col, 0):
-            self._put_stone_flip_direction(row, 1, col, 0)
-        if self._can_flip_move(row, 0, col, -1):
-            self._put_stone_flip_direction(row, 0, col, -1)
-        if self._can_flip_move(row, 0, col, 1):
-            self._put_stone_flip_direction(row, 0, col, 1)
-        if self._can_flip_move(row, -1, col, -1):
-            self._put_stone_flip_direction(row, -1, col, -1)
-        if self._can_flip_move(row, 1, col, 1):
-            self._put_stone_flip_direction(row, 1, col, 1)
-        if self._can_flip_move(row, 1, col, -1):
-            self._put_stone_flip_direction(row, 1, col, -1)
-        if self._can_flip_move(row, -1, col, 1):
-            self._put_stone_flip_direction(row, -1, col, 1)
+        for rd, cd in ((1, 0), (-1, 0), (0, -1), (0, 1), (-1, -1), (1, 1), (-1, 1), (1, -1)):
+            self._flip_if_can(row, rd, col, cd)
 
     def _put_stone_flip_direction(self, row, rd, col, cd):
         r = row + rd
