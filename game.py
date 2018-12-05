@@ -52,7 +52,11 @@ class Game:
         return self._can_flip_move(row, -1, col, 0) or \
                self._can_flip_move(row, 1, col, 0) or \
                self._can_flip_move(row, 0, col, 1) or \
-               self._can_flip_move(row, 0, col, -1)
+               self._can_flip_move(row, 0, col, -1) or \
+               self._can_flip_move(row, 1, col, 1) or \
+               self._can_flip_move(row, -1, col, -1) or \
+               self._can_flip_move(row, 1, col, -1) or \
+               self._can_flip_move(row, -1, col, 1)
 
     def _put_stone_flip(self, row, col):
         self.board[row][col] = self._players_stone()
@@ -64,6 +68,14 @@ class Game:
             self._put_stone_flip_direction(row, 0, col, -1)
         if self._can_flip_move(row, 0, col, 1):
             self._put_stone_flip_direction(row, 0, col, 1)
+        if self._can_flip_move(row, -1, col, -1):
+            self._put_stone_flip_direction(row, -1, col, -1)
+        if self._can_flip_move(row, 1, col, 1):
+            self._put_stone_flip_direction(row, 1, col, 1)
+        if self._can_flip_move(row, 1, col, -1):
+            self._put_stone_flip_direction(row, 1, col, -1)
+        if self._can_flip_move(row, -1, col, 1):
+            self._put_stone_flip_direction(row, -1, col, 1)
 
     def _put_stone_flip_direction(self, row, rd, col, cd):
         r = row + rd
@@ -87,6 +99,13 @@ class Game:
 
         if self.move_count == 8 * 8:
             return END
+
+        s = set()
+        for row in self.board:
+            for cell in row:
+                s.add(cell)
+        if len(s) == 2:
+            return END
         else:
             return CONTINUE
 
@@ -95,7 +114,6 @@ class Game:
             print(''.join(row))
 
     def _show_result(self):
-        assert self.move_count == 8 * 8
         self._show_board()
         o = 0
         x = 0
@@ -113,25 +131,58 @@ class Game:
         else:
             print("X won!")
 
+    def _change_turn(self):
+        if self.current_player == PLAYER_O:
+            self.current_player = PLAYER_X
+        else:
+            self.current_player = PLAYER_O
+
     def start(self):
+        passed = False
         while True:
+            availables = []
+            for i in range(len(self.board)):
+                for j in range(len(self.board[0])):
+                    if self.board[i][j] == BLANK and self._can_flip_stone(i, j):
+                        availables.append((i, j))
+
+            for counter, (i, j) in enumerate(availables):
+                self.board[i][j] = chr(ord('a')+counter)
+
             self._show_board()
+            for i, j in availables:
+                self.board[i][j] = BLANK
+
+            if availables:
+                passed = False
+            else:
+                if passed:
+                    print("End.")
+                    self._show_result()
+                    return
+                print("Pass")
+                passed = True
+                self._change_turn()
+                continue
+
             line = input().strip()
             try:
-                row, col = [int(x) for x in line.split(' ')]
+                num = ord(line)-ord('a')
             except:
                 print("Invalid input")
                 continue
+            if num < 0 or len(availables)-1 < num:
+                print("Invalid input")
+                continue
+            row, col = availables[num]
             result = self._play_move(row, col)
             if result == INVALID:
                 print("Invalid move")
                 continue
             if result == END:
                 self._show_result()
-            if self.current_player == PLAYER_O:
-                self.current_player = PLAYER_X
-            else:
-                self.current_player = PLAYER_O
+                return
+            self._change_turn()
 
 
 if __name__ == '__main__':
